@@ -24,8 +24,18 @@
     <Compile Include="$(MSBuildThisFileDirectory)Mockups\MockGridTerminalSystem.debug.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Mockups\MockRuntime.debug.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Mockups\MockedRun.debug.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Mockups\UIMockedRun.debug.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)UI\MainWindow.debug.xaml.cs">
+      <SubType>Code</SubType>
+      <DependentUpon>MainWindow.debug.xaml</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Mockups\Base\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="$(MSBuildThisFileDirectory)UI\MainWindow.debug.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
 </Project>
