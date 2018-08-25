@@ -1,37 +1,52 @@
 ﻿using IngameScript.Mockups;
-using System;
-using System.Windows.Threading;
+using System.Timers;
 
-namespace IngameScript.UI
+namespace IngameScript.Views
 {
     public class UIMockedRun : MockedRun
     {
-        // Possibly placeholder until the Presentation Layer is made.
-        private MainWindow Ui { get; set; }
+        public delegate void OnTickedEventHandler();
+        /// <summary>
+        /// Fires after the Run has been stepped forward.
+        /// </summary>
+        public event OnTickedEventHandler OnTicked;
 
-        public UIMockedRun(MainWindow ui)
+        private bool firstEcho = true;
+
+        public UIMockedRun()
         {
-            this.Ui = ui;
+            RunTimer.Elapsed += RunTimer_OnElapsed;
         }
 
-        bool firstEcho = true;
+        public Timer RunTimer { get; set; } = new Timer(16);
+        
+        public string EchoText { get; set; }
+
+        private void RunTimer_OnElapsed(object sender, ElapsedEventArgs e)
+        {
+            this.NextTick();
+        }
+
         public override void Echo(string text)
         {
             if (firstEcho)
             {
                 firstEcho = false;
-                Ui.EchoBlock.Dispatcher.BeginInvoke(DispatcherPriority.DataBind, new Action(() => Ui.EchoBlock.Text = $"{text}\n"));
+                EchoText = $"{text}\n";
             }
             else
             {
-                Ui.EchoBlock.Dispatcher.BeginInvoke(DispatcherPriority.DataBind, new Action(() => Ui.EchoBlock.Text += $"{text}\n"));
+                EchoText += $"{text}\n";
             }
         }
 
         public override bool NextTick(out MockedRunFrame frame)
         {
             firstEcho = true;
-            return base.NextTick(out frame);
+            bool cont = base.NextTick(out frame);
+            OnTicked();
+            return cont;
         }
+
     }
 }

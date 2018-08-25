@@ -9,6 +9,10 @@
     <Import_RootNamespace>IngameScript</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)App.debug.xaml.cs">
+      <SubType>Code</SubType>
+      <DependentUpon>App.debug.xaml</DependentUpon>
+    </Compile>
     <Compile Include="$(MSBuildThisFileDirectory)Mockups\Asserts\AssertionException.debug.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Mockups\Asserts\Assert.debug.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Mockups\Base\MockCubeBlock.debug.cs" />
@@ -25,16 +29,22 @@
     <Compile Include="$(MSBuildThisFileDirectory)Mockups\MockRuntime.debug.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Mockups\MockedRun.debug.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Mockups\UIMockedRun.debug.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)UI\MainWindow.debug.xaml.cs">
+    <Compile Include="$(MSBuildThisFileDirectory)Views\BaseCommand.debug.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Views\BaseViewModel.debug.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Views\MainWindow\MainWindow.debug.xaml.cs">
       <SubType>Code</SubType>
       <DependentUpon>MainWindow.debug.xaml</DependentUpon>
     </Compile>
+    <Compile Include="$(MSBuildThisFileDirectory)Views\MainWindow\MainWindowViewModel.debug.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="$(MSBuildThisFileDirectory)Mockups\Base\" />
   </ItemGroup>
   <ItemGroup>
-    <Page Include="$(MSBuildThisFileDirectory)UI\MainWindow.debug.xaml">
+    <ApplicationDefinition Include="$(MSBuildThisFileDirectory)App.debug.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </ApplicationDefinition>
+    <Page Include="$(MSBuildThisFileDirectory)Views\MainWindow\MainWindow.debug.xaml">
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>

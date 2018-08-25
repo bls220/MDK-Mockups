@@ -1,11 +1,13 @@
-﻿<Window x:Class="IngameScript.UI.MainWindow"
+﻿<Window x:Class="IngameScript.Views.MainWindow.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:IngameScript.Views.MainWindow"
+        xmlns:views="clr-namespace:IngameScript.Views"
         mc:Ignorable="d"
-        Closing="Window_Closing"
         Title="MainWindow" Height="450" Width="800">
+    
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*" />
@@ -14,11 +16,10 @@
         </Grid.RowDefinitions>
         <Grid>
             <StackPanel VerticalAlignment="Top" Orientation="Horizontal">
-                <Button x:Name="btnStart" Content="Start" VerticalAlignment="Top" Width="75" Margin="5,0" HorizontalAlignment="Left" Click="btnStart_Click"/>
-                <Button x:Name="btnPause" Content="Pause" VerticalAlignment="Top" Width="75" Margin="5,0" HorizontalAlignment="Left" Click="btnPause_Click"/>
+                <Button Content="{Binding TimerToggleText}" VerticalAlignment="Top" Width="75" Margin="5,0" HorizontalAlignment="Left" Command="{Binding ToggleRunCommand}"/>
             </StackPanel>
         </Grid>
         <GridSplitter Grid.Row="1" HorizontalAlignment="Stretch" Height="5"/>
-        <TextBlock x:Name="EchoBlock" Grid.Row="2" TextWrapping="Wrap" Text="TextBlock" Foreground="White" Background="Black"/>
+        <TextBlock x:Name="EchoBlock" Grid.Row="2" TextWrapping="Wrap" Text="{Binding EchoText}" Foreground="White" Background="Black"/>
     </Grid>
 </Window>
