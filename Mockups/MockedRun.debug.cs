@@ -1,41 +1,57 @@
-﻿using System;
+﻿using IngameScript.Mockups.Blocks;
+using Sandbox.ModAPI.Ingame;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
-using IngameScript.Mockups.Blocks;
-using Sandbox.ModAPI.Ingame;
+using System.Runtime.CompilerServices;
 
 namespace IngameScript.Mockups
 {
     /// <summary>
     /// Represents a mocked-up run of one or more scripts
     /// </summary>
-    public abstract class MockedRun
+    public abstract class MockedRun : INotifyPropertyChanged
     {
-        List<MockProgrammableBlock> _programmableBlocks = new List<MockProgrammableBlock>();
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void RaisePropertyChanged([CallerMemberName] string property = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
 
-        long _tickCount;
+        private ObservableCollection<MockProgrammableBlock> _programmableBlocks = new ObservableCollection<MockProgrammableBlock>();
+        private long _tickCount;
+        private IMyGridTerminalSystem _gridTerminalSystem;
 
         protected MockedRun()
         {
-            MockedProgrammableBlocks = new ReadOnlyCollection<MockProgrammableBlock>(_programmableBlocks);
+            this.MockedProgrammableBlocks = new ReadOnlyObservableCollection<MockProgrammableBlock>(this._programmableBlocks);
         }
 
         /// <summary>
-        /// Determines whether this run has been initialized. 
+        /// Determines whether this run has been initialized.
         /// </summary>
         public bool IsInitialized { get; private set; }
 
         /// <summary>
         /// Gets or sets the grid terminal system to use during this run. This property must be populated.
         /// </summary>
-        public virtual IMyGridTerminalSystem GridTerminalSystem { get; set; }
+        public virtual IMyGridTerminalSystem GridTerminalSystem
+        {
+            get => _gridTerminalSystem;
+            set
+            {
+                if (_gridTerminalSystem != value)
+                {
+                    _gridTerminalSystem = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
 
         /// <summary>
         /// A list of mocked programmable blocks available in the <see cref="GridTerminalSystem"/>. This collection
         /// is filled out during the initialization of the run.
         /// </summary>
-        public ReadOnlyCollection<MockProgrammableBlock> MockedProgrammableBlocks { get; }
+        public ReadOnlyObservableCollection<MockProgrammableBlock> MockedProgrammableBlocks { get; }
 
         /// <summary>
         /// Echos text onto the scripting console. This is the method used for the script Echo command
@@ -55,24 +71,34 @@ namespace IngameScript.Mockups
             updateType = UpdateType.None;
             var runtime = pb.Runtime;
             if (runtime == null || runtime.UpdateFrequency == UpdateFrequency.None)
+            {
                 return false;
+            }
 
             if ((runtime.UpdateFrequency & UpdateFrequency.Once) != 0)
             {
                 updateType |= UpdateType.Once;
                 runtime.UpdateFrequency &= ~UpdateFrequency.Once;
                 if (runtime.UpdateFrequency == UpdateFrequency.None)
+                {
                     return false;
+                }
             }
 
             if ((runtime.UpdateFrequency & UpdateFrequency.Update1) != 0)
+            {
                 updateType |= UpdateType.Update1;
+            }
 
             if ((runtime.UpdateFrequency & UpdateFrequency.Update10) != 0 && ticks % 10 == 0)
+            {
                 updateType |= UpdateType.Update10;
+            }
 
             if ((runtime.UpdateFrequency & UpdateFrequency.Update100) != 0 && ticks % 100 == 0)
+            {
                 updateType |= UpdateType.Update100;
+            }
 
             return true;
         }
@@ -83,8 +109,7 @@ namespace IngameScript.Mockups
         /// <returns><c>true</c> if the run should continue; <c>false</c> otherwise.</returns>
         public bool NextTick()
         {
-            MockedRunFrame frame;
-            return NextTick(out frame);
+            return this.NextTick(out MockedRunFrame frame);
         }
 
         /// <summary>
@@ -93,24 +118,25 @@ namespace IngameScript.Mockups
         /// <returns><c>true</c> if the run should continue; <c>false</c> otherwise.</returns>
         public virtual bool NextTick(out MockedRunFrame frame)
         {
-            EnsureInit();
+            this.EnsureInit();
             var scheduledPBs = 0;
             var runPBs = 0;
-            foreach (var pb in MockedProgrammableBlocks)
+            foreach (var pb in this.MockedProgrammableBlocks)
             {
-                UpdateType updateType;
-                if (pb.TryGetUpdateTypeFor(_tickCount, out updateType))
+                if (pb.TryGetUpdateTypeFor(this._tickCount, out UpdateType updateType))
                 {
-                    RunProgrammableBlock(pb, null, updateType);
+                    this.RunProgrammableBlock(pb, null, updateType);
                     runPBs++;
                 }
                 pb.ToggleOnceFlag();
-                if (pb.IsScheduledForLater(_tickCount))
+                if (pb.IsScheduledForLater(this._tickCount))
+                {
                     scheduledPBs++;
+                }
             }
 
-            frame = new MockedRunFrame(_tickCount, scheduledPBs > 0, scheduledPBs, runPBs);
-            _tickCount++;
+            frame = new MockedRunFrame(this._tickCount, scheduledPBs > 0, scheduledPBs, runPBs);
+            this._tickCount++;
             return scheduledPBs > 0;
         }
 
@@ -119,16 +145,19 @@ namespace IngameScript.Mockups
         /// </summary>
         protected void EnsureInit()
         {
-            if (IsInitialized)
+            if (this.IsInitialized)
+            {
                 return;
-            IsInitialized = true;
+            }
 
-            Debug.Assert(GridTerminalSystem != null, nameof(GridTerminalSystem) + " != null");
+            this.IsInitialized = true;
 
-            _tickCount = 0;
-            FindProgrammableBlocks(_programmableBlocks);
-            Starting();
-            InstallPrograms();
+            Debug.Assert(this.GridTerminalSystem != null, nameof(this.GridTerminalSystem) + " != null");
+
+            this._tickCount = 0;
+            this.FindProgrammableBlocks(this._programmableBlocks);
+            this.Starting();
+            this.InstallPrograms();
         }
 
         /// <summary>
@@ -139,11 +168,14 @@ namespace IngameScript.Mockups
         /// <param name="updateType"></param>
         public void Trigger(string programmableBlockName, string argument = null, UpdateType updateType = UpdateType.Trigger)
         {
-            var pb = GridTerminalSystem.GetBlockWithName(programmableBlockName) as MockProgrammableBlock;
+            var pb = this.GridTerminalSystem.GetBlockWithName(programmableBlockName) as MockProgrammableBlock;
             if (pb == null)
+            {
                 throw new InvalidOperationException($"Cannot find a mocked programmable block named {programmableBlockName}");
-            EnsureInit();
-            RunProgrammableBlock(pb, argument, updateType);
+            }
+
+            this.EnsureInit();
+            this.RunProgrammableBlock(pb, argument, updateType);
         }
 
         /// <summary>
@@ -154,11 +186,14 @@ namespace IngameScript.Mockups
         /// <param name="updateType"></param>
         public void Trigger(long entityId, string argument = null, UpdateType updateType = UpdateType.Trigger)
         {
-            var pb = GridTerminalSystem.GetBlockWithId(entityId) as MockProgrammableBlock;
+            var pb = this.GridTerminalSystem.GetBlockWithId(entityId) as MockProgrammableBlock;
             if (pb == null)
+            {
                 throw new InvalidOperationException($"Cannot find a mocked programmable block with the ID {entityId}");
-            EnsureInit();
-            RunProgrammableBlock(pb, argument, updateType);
+            }
+
+            this.EnsureInit();
+            this.RunProgrammableBlock(pb, argument, updateType);
         }
 
         /// <summary>
@@ -174,10 +209,7 @@ namespace IngameScript.Mockups
         /// <param name="pb"></param>
         /// <param name="argument"></param>
         /// <param name="updateType"></param>
-        protected virtual void RunProgrammableBlock(MockProgrammableBlock pb, string argument, UpdateType updateType)
-        {
-            pb.Run(argument, updateType);
-        }
+        protected virtual void RunProgrammableBlock(MockProgrammableBlock pb, string argument, UpdateType updateType) => pb.Run(argument, updateType);
 
         /// <summary>
         /// Runs through all the detected mocked programmable blocks and
@@ -185,21 +217,26 @@ namespace IngameScript.Mockups
         /// </summary>
         protected virtual void InstallPrograms()
         {
-            foreach (var pb in MockedProgrammableBlocks)
+            foreach (var pb in this.MockedProgrammableBlocks)
+            {
                 pb.Install(this);
+            }
         }
 
         /// <summary>
         /// Finds all mocked programmable blocks and places them in the given list
         /// </summary>
         /// <param name="programmableBlocks"></param>
-        protected virtual void FindProgrammableBlocks(List<MockProgrammableBlock> programmableBlocks)
+        protected virtual void FindProgrammableBlocks(ObservableCollection<MockProgrammableBlock> programmableBlocks)
         {
-            GridTerminalSystem.GetBlocksOfType<IMyProgrammableBlock>(null as List<IMyTerminalBlock>, pb =>
+            this.GridTerminalSystem.GetBlocksOfType<IMyProgrammableBlock>(null as List<IMyTerminalBlock>, pb =>
             {
                 var mock = pb as MockProgrammableBlock;
                 if (mock != null)
+                {
                     programmableBlocks.Add(mock);
+                }
+
                 return false;
             });
         }
@@ -209,9 +246,6 @@ namespace IngameScript.Mockups
         /// </summary>
         /// <param name="scheduledBlocks"></param>
         /// <returns><c>true</c> if the tick is valid and the run should continue; <c>false</c> to stop the run.</returns>
-        protected virtual bool OnTick(int scheduledBlocks)
-        {
-            return scheduledBlocks > 0;
-        }
+        protected virtual bool OnTick(int scheduledBlocks) => scheduledBlocks > 0;
     }
 }

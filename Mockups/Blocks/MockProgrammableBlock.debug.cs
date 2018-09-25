@@ -1,16 +1,16 @@
-﻿using System;
-using System.Diagnostics;
-using IngameScript.Mockups.Base;
+﻿using IngameScript.Mockups.Base;
 using Malware.MDKUtilities;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Ingame;
+using System;
+using System.Diagnostics;
 using IMyProgrammableBlock = Sandbox.ModAPI.Ingame.IMyProgrammableBlock;
 
 namespace IngameScript.Mockups.Blocks
 {
     public class MockProgrammableBlock : MockFunctionalBlock, IMyProgrammableBlock
     {
-        string _storage = string.Empty;
+        private string _storage = String.Empty;
 
         public virtual Type ProgramType { get; set; }
 
@@ -20,8 +20,15 @@ namespace IngameScript.Mockups.Blocks
 
         public virtual string Storage
         {
-            get { return _storage; }
-            set { _storage = value ?? ""; }
+            get => this._storage;
+            set
+            {
+                if ((this._storage ?? String.Empty) != (value ?? String.Empty))
+                {
+                    this._storage = value ?? String.Empty;
+                    RaisePropertyChanged();
+                }
+            }
         }
 
         public virtual bool IsRunning { get; set; }
@@ -30,16 +37,25 @@ namespace IngameScript.Mockups.Blocks
 
         public virtual bool Run(string argument, UpdateType updateType)
         {
-            if (!Enabled)
+            if (!this.Enabled)
+            {
                 return false;
-            if (Program == null)
+            }
+
+            if (this.Program == null)
+            {
                 return false;
-            if (IsRunning)
+            }
+
+            if (this.IsRunning)
+            {
                 return false;
+            }
+
             try
             {
-                IsRunning = true;
-                MDKFactory.Run(Program, argument ?? "", updateType: updateType);
+                this.IsRunning = true;
+                MDKFactory.Run(this.Program, argument ?? "", updateType: updateType);
                 return true;
             }
             catch (Exception)
@@ -48,14 +64,11 @@ namespace IngameScript.Mockups.Blocks
             }
             finally
             {
-                IsRunning = false;
+                this.IsRunning = false;
             }
         }
 
-        public virtual bool TryRun(string argument)
-        {
-            return Run(argument, UpdateType.Script);
-        }
+        public virtual bool TryRun(string argument) => this.Run(argument, UpdateType.Script);
 
         /// <summary>
         /// Installs the program for the given mocked run. Any programmable block may only be
@@ -64,12 +77,17 @@ namespace IngameScript.Mockups.Blocks
         /// <param name="mockedRun"></param>
         public virtual void Install(MockedRun mockedRun)
         {
-            if (Program != null)
+            if (this.Program != null)
+            {
                 return;
-            if (ProgramType == null)
-                return;
+            }
 
-            Debug.Assert(Runtime != null, $"{nameof(Runtime)} != null");
+            if (this.ProgramType == null)
+            {
+                return;
+            }
+
+            Debug.Assert(this.Runtime != null, $"{nameof(this.Runtime)} != null");
             var config = new MDKFactory.ProgramConfig
             {
                 GridTerminalSystem = mockedRun.GridTerminalSystem,
@@ -78,7 +96,7 @@ namespace IngameScript.Mockups.Blocks
                 Echo = mockedRun.Echo,
                 Storage = Storage
             };
-            Program = MDKFactory.CreateProgram(ProgramType, config);
+            this.Program = MDKFactory.CreateProgram(this.ProgramType, config);
         }
 
         /// <summary>
@@ -90,26 +108,36 @@ namespace IngameScript.Mockups.Blocks
         public virtual bool TryGetUpdateTypeFor(long ticks, out UpdateType updateType)
         {
             updateType = UpdateType.None;
-            var runtime = Runtime;
+            var runtime = this.Runtime;
             if (runtime == null || runtime.UpdateFrequency == UpdateFrequency.None)
+            {
                 return false;
+            }
 
             if ((runtime.UpdateFrequency & UpdateFrequency.Once) != 0)
             {
                 updateType |= UpdateType.Once;
                 runtime.UpdateFrequency &= ~UpdateFrequency.Once;
                 if (runtime.UpdateFrequency == UpdateFrequency.None)
+                {
                     return false;
+                }
             }
 
             if ((runtime.UpdateFrequency & UpdateFrequency.Update1) != 0)
+            {
                 updateType |= UpdateType.Update1;
+            }
 
             if ((runtime.UpdateFrequency & UpdateFrequency.Update10) != 0 && ticks % 10 == 0)
+            {
                 updateType |= UpdateType.Update10;
+            }
 
             if ((runtime.UpdateFrequency & UpdateFrequency.Update100) != 0 && ticks % 100 == 0)
+            {
                 updateType |= UpdateType.Update100;
+            }
 
             return updateType != UpdateType.None;
         }
@@ -121,13 +149,17 @@ namespace IngameScript.Mockups.Blocks
         /// <returns></returns>
         public virtual bool IsScheduledForLater(long ticks)
         {
-            var runtime = Runtime;
+            var runtime = this.Runtime;
             if (runtime == null)
+            {
                 return false;
+            }
 
             var freq = runtime.UpdateFrequency;
             if (freq == UpdateFrequency.None)
+            {
                 return false;
+            }
 
             return true;
         }
@@ -137,9 +169,11 @@ namespace IngameScript.Mockups.Blocks
         /// </summary>
         public virtual void ToggleOnceFlag()
         {
-            var runtime = Runtime;
+            var runtime = this.Runtime;
             if (runtime == null)
+            {
                 return;
+            }
 
             runtime.UpdateFrequency &= ~UpdateFrequency.Once;
         }

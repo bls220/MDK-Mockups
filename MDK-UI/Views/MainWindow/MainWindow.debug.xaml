@@ -1,0 +1,63 @@
+﻿<Window x:Class="IngameScript.Views.MainWindow.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:IngameScript.Views.MainWindow"
+        xmlns:views="clr-namespace:IngameScript.Views"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+
+    <DockPanel>
+        <ToolBarTray DockPanel.Dock="Top">
+            <ToolBar>
+                <ToggleButton Command="{Binding ToggleSimulationCommand}">
+                    <Image>
+                        <Image.Style>
+                            <Style TargetType="{x:Type Image}">
+                                <Setter Property="Source" Value="/MDK-UI;component/Icons/fugue-icons-3.5.6/icons/control.png" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                        <Setter Property="Source" Value="/MDK-UI;component/Icons/fugue-icons-3.5.6/icons/control-pause.png" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding IsRunning}" Value="False">
+                                        <Setter Property="Source" Value="/MDK-UI;component/Icons/fugue-icons-3.5.6/icons/control.png" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Image.Style>
+                    </Image>
+                </ToggleButton>
+                <ToggleButton Command="{Binding StepSimulationCommand}">
+                    <Image Source="/MDK-UI;component/Icons/fugue-icons-3.5.6/icons/arrow-skip.png" IsEnabled="{Binding Path=IsEnabled,RelativeSource={RelativeSource Mode=FindAncestor,AncestorType={x:Type ToggleButton}}}">
+                        <Image.Style>
+                            <Style TargetType="Image">
+                                <Style.Triggers>
+                                    <Trigger Property="IsEnabled" Value="False">
+                                        <Setter Property="Opacity" Value="0.5" />
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Image.Style>
+                    </Image>
+                </ToggleButton>
+            </ToolBar>
+        </ToolBarTray>
+        <Expander DockPanel.Dock="Bottom" ExpandDirection="Up" Header="Console" IsExpanded="True">
+            <TextBlock x:Name="EchoBlock" Height="50px" TextWrapping="Wrap" Text="{Binding EchoText}" Foreground="White" Background="Black"/>
+        </Expander>
+        <Expander DockPanel.Dock="Right" ExpandDirection="Left">
+            <Expander.Header>
+                <TextBlock Text="Blocks">
+                    <TextBlock.LayoutTransform>
+                        <RotateTransform Angle="-90"/>
+                    </TextBlock.LayoutTransform>
+                </TextBlock>
+            </Expander.Header>
+            <views:BlockList DataContext="{Binding BlocksList}"></views:BlockList>
+        </Expander>
+        <Border BorderBrush="LightGray" Background="Gray" BorderThickness="2">
+            <Grid/>
+        </Border>
+    </DockPanel>
+</Window>

@@ -1,11 +1,13 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using VRage.Game.Components;
 using VRage.Game.ModAPI.Ingame;
 using VRageMath;
 
 namespace IngameScript.Mockups.Base
 {
-    public abstract class MockEntity : IMyEntity
+    public abstract class MockEntity : IMyEntity, INotifyPropertyChanged
     {
         public virtual Vector3D WorldPosition { get; set; }
 
@@ -51,5 +53,8 @@ namespace IngameScript.Mockups.Base
         }
 
         public virtual Vector3D GetPosition() => WorldPosition;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void RaisePropertyChanged([CallerMemberName] string property = null) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
     }
 }

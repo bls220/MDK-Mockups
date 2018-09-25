@@ -12,41 +12,77 @@ namespace IngameScript.Views
         public event OnTickedEventHandler OnTicked;
 
         private bool firstEcho = true;
+        private string _echoText;
 
         public UIMockedRun()
         {
-            RunTimer.Elapsed += RunTimer_OnElapsed;
+            this.RunTimer.Elapsed += this.RunTimer_OnElapsed;
         }
 
-        public Timer RunTimer { get; set; } = new Timer(16);
-        
-        public string EchoText { get; set; }
+        // Arguably should be part of the UI. But this seems more like Business Logic to me.
+        private Timer RunTimer { get; set; } = new Timer(16);
 
-        private void RunTimer_OnElapsed(object sender, ElapsedEventArgs e)
+        public string EchoText
         {
-            this.NextTick();
+            get => this._echoText;
+            set
+            {
+                if (this._echoText != value)
+                {
+                    this._echoText = value;
+                    this.RaisePropertyChanged();
+                }
+            }
         }
+
+        private void RunTimer_OnElapsed(object sender, ElapsedEventArgs e) => this.NextTick();
 
         public override void Echo(string text)
         {
-            if (firstEcho)
+            if (this.firstEcho)
             {
-                firstEcho = false;
-                EchoText = $"{text}\n";
+                this.firstEcho = false;
+                this.EchoText = $"{text}\n";
             }
             else
             {
-                EchoText += $"{text}\n";
+                this.EchoText += $"{text}\n";
             }
         }
 
+        public bool IsRunning => this.RunTimer.Enabled;
+
         public override bool NextTick(out MockedRunFrame frame)
         {
-            firstEcho = true;
+            this.firstEcho = true;
             bool cont = base.NextTick(out frame);
-            OnTicked();
+            OnTicked?.Invoke();
             return cont;
         }
 
+        /// <summary>
+        /// Starts continuously running the simulation.
+        /// </summary>
+        /// <remarks>Simulation Speed is based on <see cref="RunTimer"/> interval</remarks>
+        public void Run()
+        {
+            if (!this.RunTimer.Enabled)
+            {
+                this.RunTimer.Enabled = true;
+                this.RaisePropertyChanged(nameof(this.IsRunning));
+            }
+        }
+
+        /// <summary>
+        /// Stops continously running the simulation.
+        /// </summary>
+        public void Pause()
+        {
+            if (this.RunTimer.Enabled)
+            {
+                this.RunTimer.Enabled = false;
+                this.RaisePropertyChanged(nameof(this.IsRunning));
+            }
+        }
     }
 }
